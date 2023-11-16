@@ -189,7 +189,7 @@ static void OnP2PRxError(void);
 static void MX_I2C1_Init(void);
 static int16_t flux;
 static int16_t savedValue;
-static uint8_t vagaStatus = 0, transmiteStatusVaga = 0;
+static uint8_t vagaStatus = 0, transmiteStatusVaga = 1;
 //static int16_t lastFlux;
 
 /**
@@ -1523,7 +1523,14 @@ void tratarInterrupcao(void)
 		int32_t magY = FXOS8700CQGetData(GET_MAG_Y) * FXOS8700CQGetData(GET_MAG_Y);
 		int32_t magZ = FXOS8700CQGetData(GET_MAG_X) * FXOS8700CQGetData(GET_MAG_X);
 		//APP_LOG(TS_OFF, VLEVEL_L, "Z %d  Y %d X %d\r\n", FXOS8700CQGetData(GET_MAG_Z), FXOS8700CQGetData(GET_MAG_Y), FXOS8700CQGetData(GET_MAG_X));
-		flux = squareRoot(magZ + magY + magX);
+
+		static uint32_t last_tick = 0;
+		uint32_t tick;
+		tick = UTIL_TIMER_GetCurrentTime();
+		if(tick - last_tick >= INPUT_DEBOUNCE_TIME){
+			flux = squareRoot(magZ + magY + magX);
+			last_tick = tick;
+		}
 		APP_LOG(TS_OFF, VLEVEL_L, "flux: %d\r\n", flux);
 
 		if (flux > savedValue)
